@@ -40,13 +40,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware
+# CORS Middleware - Configure allowed origins
+cors_origins = settings.cors_origins_list
+# If wildcard is set, allow all origins
+if "*" in cors_origins or settings.CORS_ORIGINS == "*":
+    cors_origins = ["*"]
+    
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=cors_origins,
+    allow_credentials=False,  # Must be False when using "*"
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Mount static files for uploads
