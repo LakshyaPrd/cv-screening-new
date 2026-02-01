@@ -51,7 +51,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=production-secret-key-change-this
       - DEBUG=False
-      - CORS_ORIGINS=http://localhost:3006,http://YOUR_VPS_IP:3006  # UPDATE THIS
+      - CORS_ORIGINS=http://localhost:3006,http://76.13.17.251:3006  # UPDATE THIS
       - TESSERACT_PATH=/usr/bin/tesseract
       - POPPLER_PATH=/usr/bin
     volumes:
@@ -68,7 +68,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://YOUR_VPS_IP:8004  # UPDATE THIS with actual VPS IP
+        NEXT_PUBLIC_API_URL: http://76.13.17.251:8004  # UPDATE THIS with actual VPS IP
     container_name: cv_screening_frontend
     restart: always
     ports:

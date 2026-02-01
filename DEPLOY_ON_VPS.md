@@ -1,73 +1,77 @@
-# Deployment Guide for Backend API Testing
+# Deployment Guide (Git Workflow)
 
-To allow your client to test **only the Backend APIs**, follow these streamlined instructions.
+## 1. Local Steps (Your Machine)
 
-## 1. Prepare for Deployment
-
-I have already configured `docker-compose.yml` with non-conflicting ports:
-- **Backend API**: Port `8004` (Access at `http://YOUR_VPS_IP:8004/api/docs`)
-- **Database**: Port `5433`
-- **Redis**: Port `6380`
-
-## 2. Transfer Code to VPS
-
-1. **Copy your project** to the VPS (using Git or SCP).
+1. **Commit your changes**:
+   Make sure the updated `docker-compose.yml` (with new ports) is committed.
    ```bash
-   scp -r "c:\Lakshya\cv-screening-new" root@your_vps_ip:/root/
+   git add .
+   git commit -m "Configure production ports and deployment settings"
    ```
-   *(Or git clone if you are using a repo)*
 
-## 3. Configure for API Testing
-
-1. **SSH into your VPS** and go to the folder:
+2. **Push to GitHub**:
    ```bash
+   git push origin main
+   ```
+   *(Or whatever branch you are using)*
+
+## 2. Server Steps (VPS)
+
+1. **SSH into your VPS**:
+   ```bash
+   ssh root@your_vps_ip
+   ```
+
+2. **Clone/Pull the Code**:
+   If this is the **first time**:
+   ```bash
+   git clone https://github.com/LakshyaPrd/cv-screening-new.git
    cd cv-screening-new
    ```
-
-2. **Edit `docker-compose.yml` to allow easy access**:
-   We will set CORS to `*` so your client can test from anywhere (Postman, etc.) without issues.
    
+   If you **already cloned it**:
+   ```bash
+   cd cv-screening-new
+   git pull origin main
+   ```
+
+3. **Configure the Environment**:
+   **Crucial Step**: You must edit `docker-compose.yml` on the server to set the API URL correctly if you haven't done so in the code itself.
+   
+   However, since we are doing **Backend API Testing Only**, we just need to ensure CORS allows external access.
+   
+   Edit the file:
    ```bash
    nano docker-compose.yml
    ```
    
-   Find the backend environment section and change `CORS_ORIGINS`:
-   ```yaml
-   - CORS_ORIGINS=*
+   Ensure this line exists in the `backend` service:
+   `CORS_ORIGINS=*`
+   
+   *(If you pushed the file with CORS_ORIGINS=*, you can skip this editing step).*
+
+4. **Deploy Backend Only**:
+   Run this command to start only the necessary services for API testing (Backend + Database + Redis):
+   
+   ```bash
+   docker compose up -d --build backend postgres redis celery_worker
    ```
-   *(This is easier than finding the exact client IP)*
+   
+   *This saves memory by ignoring the frontend container.*
 
-   *Press `Ctrl+X`, `Y`, `Enter` to save.*
+## 3. Verify Deployment
 
-## 4. Launch STRICTLY the Backend
-
-Since you only want to test the APIs, simply run the backend services. This saves resources by NOT starting the frontend.
-
+Run:
 ```bash
-docker compose up -d --build backend postgres redis celery_worker
+docker ps
 ```
+You should see 4 containers running (backend, db, redis, celery).
 
-## 5. Share with Client
+## 4. What to Send to the Client
 
-Give your client the following details:
+**Files to Share:**
+- Send them the `API_TESTING_GUIDE.md` file (I have created this in your project root).
 
-- **API Documentation (Swagger UI)**: 
-  `http://YOUR_VPS_IP:8004/api/docs`
-  *(They can try out endpoints directly here)*
-
-- **Base API URL**: 
-  `http://YOUR_VPS_IP:8004`
-
-- **Health Check**: 
-  `http://YOUR_VPS_IP:8004/health`
-
-## Troubleshooting
-
-- **Check Logs**:
-  ```bash
-  docker compose logs -f backend
-  ```
-- **Restart**:
-  ```bash
-  docker compose restart backend
-  ```
+**Information to Share:**
+- **Their VPS IP Address**: Remind them to replace `YOUR_VPS_IP` in the guide with their actual IP.
+- **Access URL**: `http://<VPS_IP>:8004/api/docs`
