@@ -5,12 +5,13 @@ services:
   postgres:
     image: postgres:14-alpine
     container_name: cv_screening_db
+    restart: always
     environment:
       POSTGRES_USER: cvuser
       POSTGRES_PASSWORD: cvpassword
       POSTGRES_DB: cv_screening
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Changed to 5433 to avoid conflict
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,8 +24,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: cv_screening_redis
+    restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Changed to 6380 to avoid conflict
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,59 +41,54 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: cv_screening_backend
+    restart: always
     ports:
-      - "8000:8000"
+      - "8004:8000"  # Changed to 8004 to avoid conflict
     environment:
       - DATABASE_URL=postgresql://cvuser:cvpassword@postgres:5432/cv_screening
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - SECRET_KEY=your-super-secret-key-change-in-production
-      - DEBUG=True
-      - CORS_ORIGINS=http://localhost:3000
+      - SECRET_KEY=production-secret-key-change-this
+      - DEBUG=False
+      - CORS_ORIGINS=http://localhost:3006,http://YOUR_VPS_IP:3006  # UPDATE THIS
       - TESSERACT_PATH=/usr/bin/tesseract
       - POPPLER_PATH=/usr/bin
     volumes:
-      - ./backend:/app
       - uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Next.js Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://YOUR_VPS_IP:8004  # UPDATE THIS with actual VPS IP
     container_name: cv_screening_frontend
+    restart: always
     ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - "3006:3000"  # Changed to 3006 to avoid conflict
     depends_on:
       - backend
-    command: npm run dev
 
-  # Celery Worker (optional - for production async processing)
+  # Celery Worker
   celery_worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: cv_screening_celery
+    restart: always
     environment:
       - DATABASE_URL=postgresql://cvuser:cvpassword@postgres:5432/cv_screening
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - ./backend:/app
       - uploads:/app/uploads
     depends_on:
       postgres:
