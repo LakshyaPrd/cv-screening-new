@@ -1,63 +1,40 @@
-# Deployment Guide (Git Workflow)
+# Full Deployment Guide (Frontend + Backend)
 
 ## 1. Local Steps (Your Machine)
 
+Since you have already edited `docker-compose.yml` with the correct IP (`76.13.17.251`), simply save and push.
+
 1. **Commit your changes**:
-   Make sure the updated `docker-compose.yml` (with new ports) is committed.
    ```bash
    git add .
-   git commit -m "Configure production ports and deployment settings"
+   git commit -m "Configure frontend and backend for production IP"
    ```
 
 2. **Push to GitHub**:
    ```bash
    git push origin main
    ```
-   *(Or whatever branch you are using)*
 
 ## 2. Server Steps (VPS)
 
 1. **SSH into your VPS**:
    ```bash
-   ssh root@your_vps_ip
+   ssh root@76.13.17.251
    ```
 
-2. **Clone/Pull the Code**:
-   If this is the **first time**:
-   ```bash
-   git clone https://github.com/LakshyaPrd/cv-screening-new.git
-   cd cv-screening-new
-   ```
-   
-   If you **already cloned it**:
+2. **Pull the latest code**:
    ```bash
    cd cv-screening-new
    git pull origin main
    ```
 
-3. **Configure the Environment**:
-   **Crucial Step**: You must edit `docker-compose.yml` on the server to set the API URL correctly if you haven't done so in the code itself.
-   
-   However, since we are doing **Backend API Testing Only**, we just need to ensure CORS allows external access.
-   
-   Edit the file:
-   ```bash
-   nano docker-compose.yml
-   ```
-   
-   Ensure this line exists in the `backend` service:
-   `CORS_ORIGINS=*`
-   
-   *(If you pushed the file with CORS_ORIGINS=*, you can skip this editing step).*
-
-4. **Deploy Backend Only**:
-   Run this command to start only the necessary services for API testing (Backend + Database + Redis):
+3. **Deploy Everything**:
+   Run this command to build and start **ALL** services (Frontend, Backend, Database, etc.):
    
    ```bash
-   docker compose up -d --build backend postgres redis celery_worker
+   docker compose up -d --build
    ```
-   
-   *This saves memory by ignoring the frontend container.*
+   *(This will take a few minutes to build the frontend).*
 
 ## 3. Verify Deployment
 
@@ -65,13 +42,27 @@ Run:
 ```bash
 docker ps
 ```
-You should see 4 containers running (backend, db, redis, celery).
+You should see 5 containers running:
+1. `cv_screening_frontend`
+2. `cv_screening_backend`
+3. `cv_screening_celery`
+4. `cv_screening_db`
+5. `cv_screening_redis`
 
-## 4. What to Send to the Client
+## 4. Access Links
 
-**Files to Share:**
-- Send them the `API_TESTING_GUIDE.md` file (I have created this in your project root).
+Give these links to your client:
 
-**Information to Share:**
-- **Their VPS IP Address**: Remind them to replace `YOUR_VPS_IP` in the guide with their actual IP.
-- **Access URL**: `http://<VPS_IP>:8004/api/docs`
+- **Frontend Application**: `http://76.13.17.251:3006`
+  *(This is the main UI)*
+
+- **Backend API Docs**: `http://76.13.17.251:8004/api/docs`
+  *(Swagger UI for testing APIs)*
+
+## 5. Troubleshooting Frontend
+
+If the frontend loads but cannot fetch data (e.g. "Network Error"):
+1. Open the browser's Developer Tools (F12).
+2. Go to the **Console** tab.
+3. Check if there are errors connecting to `http://76.13.17.251:8004`.
+4. Ensure `CORS_ORIGINS` in `docker-compose.yml` includes `http://76.13.17.251:3006`.

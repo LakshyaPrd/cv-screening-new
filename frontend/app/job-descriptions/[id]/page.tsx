@@ -3,13 +3,15 @@
 import { use, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Loader2, Zap, Star, Users, Table2, LayoutGrid } from 'lucide-react';
+import { Loader2, Zap, Star, Users, Table2, LayoutGrid, Eye } from 'lucide-react';
 import api from '@/lib/api';
-import CandidateDataTable from '@/components/CandidateDataTable';
+import CandidateDataTable, { Match } from '@/components/CandidateDataTable';
+import CandidateDetailsModal from '@/components/CandidateDetailsModal';
 
 export default function JobDescriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
+  const [selectedCandidate, setSelectedCandidate] = useState<Match | null>(null);
   const [selectedBatchId, setSelectedBatchId] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [filters, setFilters] = useState({
@@ -339,8 +341,15 @@ export default function JobDescriptionDetailPage({ params }: { params: Promise<{
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                             {match.candidate_name || 'Unknown Name'}
+                            <button 
+                              onClick={() => setSelectedCandidate(match as Match)}
+                              className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded-full transition"
+                              title="View Full Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
                           </h3>
                           <div className="mt-1 space-y-1">
                             {match.candidate_email && (
@@ -473,6 +482,12 @@ export default function JobDescriptionDetailPage({ params }: { params: Promise<{
           )}
         </>
       )}
+      
+      <CandidateDetailsModal 
+        isOpen={!!selectedCandidate} 
+        onClose={() => setSelectedCandidate(null)} 
+        match={selectedCandidate} 
+      />
     </div>
   );
 }

@@ -67,8 +67,8 @@ class EnhancedDataExtractor:
         """
         # No spaCy needed - pure regex works perfectly!        
         # Extract all data categories
-        personal_info = self._extract_personal_info(text)
         contact_details = self._extract_contact_details(text)
+        personal_info = self._extract_personal_info(text, email=contact_details.get('email'))
         position_info = self._extract_position_info(text)
         work_history = self._extract_work_history(text)
         gcc_experience = self._calculate_gcc_experience(work_history, text)
@@ -133,12 +133,12 @@ class EnhancedDataExtractor:
             'soft_skills': evaluation.get('soft_skills'),
         }
     
-    def _extract_personal_info(self, text: str) -> Dict[str, Any]:
+    def _extract_personal_info(self, text: str, email: Optional[str] = None) -> Dict[str, Any]:
         """Extract personal information using regex patterns."""
         info = {}
         
         # Name (use existing method)
-        info['name'] = self._extract_name(text)
+        info['name'] = self._extract_name(text, email)
         
         # Date of Birth
         dob_patterns = [
@@ -665,17 +665,63 @@ class EnhancedDataExtractor:
     
     # ========== Helper methods (reused from original extractor) ==========
     
-    def _extract_name(self, text: str) -> Optional[str]:
-        """Extract candidate name."""
+    def _extract_name(self, text: str, email: Optional[str] = None) -> Optional[str]:
+        """
+        Extract candidate name.
+        Uses email for fuzzy matching if provided.
+        """
         lines = text.split('\n')
-        for line in lines[:15]:
+        
+        # 1. Try to find name matching email
+        if email:
+            username = email.split('@')[0]
+            # Remove digits and special chars from username for comparison
+            username_clean = re.sub(r'[^a-z]', '', username.lower())
+            
+            if len(username_clean) > 3:
+                for line in lines[:20]:
+                    line_clean = line.strip()
+                    if not line_clean: continue
+                    
+                    line_lower = line_clean.lower()
+                    
+                    # Skip common headers
+                    if any(keyword in line_lower for keyword in ['resume', 'curriculum', 'vitae', 'cv', 'profile']):
+                        continue
+                        
+                    # Check if line contains parts of the username
+                    # e.g. "Shifa Shaj" matches "shifashaj"
+                    line_alpha = re.sub(r'[^a-z]', '', line_lower)
+                    
+                    if len(line_alpha) > 3:
+                        # Check strict match (one contains the other)
+                        if (username_clean in line_alpha or line_alpha in username_clean) and len(line_clean.split()) >= 2:
+                            return line_clean.title()
+        
+        # 2. Standard extraction with improved exclusions
+        for line in lines[:20]:  # Increased range slightly
             line = line.strip()
             if len(line) > 0 and len(line) < 60:
-                if any(keyword in line.lower() for keyword in ['resume', 'curriculum', 'vitae', 'cv', 'profile']):
+                line_lower = line.lower()
+                
+                # Exclusions - Headers
+                if any(keyword in line_lower for keyword in ['resume', 'curriculum', 'vitae', 'cv', 'profile', 'personal information']):
+                    continue
+                
+                # Exclusions - Job Titles & Common False Positives
+                false_positives = [
+                    'survey', 'surveyor', 'quantity', 'engineer', 'architect', 'developer', 
+                    'consultant', 'manager', 'director', 'technician', 'specialist',
+                    'university', 'school', 'college', 'institute',
+                    'address', 'phone', 'email', 'contact'
+                ]
+                
+                if any(keyword in line_lower for keyword in false_positives):
                     continue
                 
                 words = line.split()
                 if 2 <= len(words) <= 5:
+                    # Check if words are mostly alphabets
                     alpha_words = [w for w in words if re.match(r'^[A-Za-z][A-Za-z.\-]*$', w)]
                     if len(alpha_words) >= 2:
                         name = ' '.join(alpha_words)

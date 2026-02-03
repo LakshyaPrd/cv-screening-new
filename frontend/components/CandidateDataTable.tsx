@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, MapPin, Building, Briefcase, DollarSign, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, MapPin, Building, Briefcase, DollarSign, Clock, Eye } from 'lucide-react';
+import CandidateDetailsModal from './CandidateDetailsModal';
 
-interface Match {
+export interface Match {
   match_id: string;
   candidate_id: string;
   total_score: number;
@@ -66,6 +67,17 @@ interface Match {
   portfolio_relevancy_score?: number;
   english_proficiency?: string;
   soft_skills?: string[];
+
+  // Detailed Scores & Justification
+  skill_score?: number;
+  role_score?: number;
+  tool_score?: number;
+  experience_score?: number;
+  portfolio_score?: number;
+  quality_score?: number;
+  justification?: string;
+  matched_skills?: string[];
+  missing_skills?: string[];
   
   // Links
   linkedin_url?: string;
@@ -89,6 +101,7 @@ export default function CandidateDataTable({
   onToggleSelect,
 }: CandidateDataTableProps) {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Match | null>(null);
   const [sortBy, setSortBy] = useState<string>('total_score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -127,6 +140,7 @@ export default function CandidateDataTable({
   };
 
   return (
+    <>
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -136,7 +150,7 @@ export default function CandidateDataTable({
                 <input type="checkbox" className="rounded" />
               </th>
             )}
-            <th className="px-3 py-3 text-left"></th>
+            <th className="px-3 py-3 text-left w-20">Actions</th>
             <th
               className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
               onClick={() => handleSort('total_score')}
@@ -197,16 +211,26 @@ export default function CandidateDataTable({
                   </td>
                 )}
                 <td className="px-3 py-4">
-                  <button
-                    onClick={() => toggleExpand(match.match_id)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {expandedRow === match.match_id ? (
-                      <ChevronUp className="w-5 h-5" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setSelectedCandidate(match)}
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
+                      title="View Full Details"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => toggleExpand(match.match_id)}
+                      className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 rounded transition"
+                      title="Expand Row"
+                    >
+                      {expandedRow === match.match_id ? (
+                        <ChevronUp className="w-5 h-5" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-4 py-4">
                   <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(match.total_score)}`}>
@@ -449,5 +473,12 @@ export default function CandidateDataTable({
         </div>
       )}
     </div>
+    
+    <CandidateDetailsModal 
+        isOpen={!!selectedCandidate} 
+        onClose={() => setSelectedCandidate(null)} 
+        match={selectedCandidate} 
+      />
+    </>
   );
 }

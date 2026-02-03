@@ -4,11 +4,9 @@ This guide is for the client/testers to verify the functionality of the CV Scree
 
 ## 1. Accessing the Environment
 
-- **Base URL**: `http://YOUR_VPS_IP:8004`
-- **Interactive Documentation (Swagger UI)**: `http://YOUR_VPS_IP:8004/api/docs`
-- **Alternative Documentation (ReDoc)**: `http://YOUR_VPS_IP:8004/api/redoc`
-
-**Note:** Replace `YOUR_VPS_IP` with the actual IP address of the server.
+- **Base URL**: `http://76.13.17.251:8004`
+- **Interactive Documentation (Swagger UI)**: `http://76.13.17.251:8004/api/docs`
+- **Alternative Documentation (ReDoc)**: `http://76.13.17.251:8004/api/redoc`
 
 ---
 
@@ -58,30 +56,71 @@ Check if your uploaded files have been processed.
   ```
 *Wait until `"status"` is `"completed"` before proceeding.*
 
-### Step 4: View Extracted Candidates
-See the data extracted from the CVs.
-- **Endpoint**: `GET /api/batches/{batch_id}/candidates`
-- **Parameters**: `batch_id` (from Step 2)
-- **Expected Response**: A list of candidate profiles with names, emails, skills, etc.
+---
 
-### Step 5: Admin Metrics (Optional)
-View system-wide statistics.
-- **Endpoint**: `GET /api/admin/system-health`
+## 3. Finding the Best Match (Ranking Candidates)
+
+Once candidates are uploaded (Step 2), you need to create a Job Description (JD) to match them against.
+
+### Step 4: Create a Job Description
+Define the role you are looking for.
+- **Endpoint**: `POST /api/jd`
+- **Body**:
+  ```json
+  {
+    "title": "Senior Python Developer",
+    "description": "Looking for an expert backend engineer.",
+    "must_have_skills": ["Python", "FastAPI", "SQL"],
+    "nice_to_have_skills": ["AWS", "Docker"],
+    "required_tools": ["Git", "Jira"],
+    "experience_years": 5
+  }
+  ```
 - **Expected Response**:
   ```json
   {
-    "status": "healthy",
-    "metrics": {
-      "total_batches": 5,
-      "total_candidates": 12,
-      ...
-    }
+    "jd_id": "uuid-for-this-job",
+    "title": "Senior Python Developer",
+    ...
+  }
+  ```
+**Action**: Copy the `jd_id` from the response.
+
+### Step 5: Run Matching Algorithm
+Trigger the AI to compare all candidates against this specific JD.
+- **Endpoint**: `POST /api/jd/{jd_id}/match`
+- **Parameters**: `jd_id` (from Step 4)
+- **Expected Response**:
+  ```json
+  {
+    "message": "Matching process started",
+    "status_url": "/api/jd/{jd_id}/matches"
   }
   ```
 
+### Step 6: Get Ranked Results (The Best Match)
+View the candidates sorted by their match score (Highest % first).
+- **Endpoint**: `GET /api/jd/{jd_id}/matches`
+- **Parameters**: `jd_id` (from Step 4)
+- **Expected Response**: A list of candidates ordered by score.
+  ```json
+  {
+    "matches": [
+      {
+        "candidate_name": "John Doe",
+        "total_score": 92.5,
+        "skill_score": 95,
+        "matched_skills": ["Python", "SQL"]
+      },
+      ...
+    ]
+  }
+  ```
+The first candidate in this list is your **Best Match**.
+
 ---
 
-## 3. Important Notes for Testing
+## 4. Important Notes for Testing
 - **Valid Files**: The system accepts PDF, JPG, PNG, DOCX.
 - **Processing Time**: OCR can take 5-10 seconds per page. Please be patient during the "processing" state.
-- **CORS**: The API is currently configured to allow requests from any origin (`*`) for ease of testing.
+- **CORS**: The API allows requests from any origin (`*`) for ease of testing.
