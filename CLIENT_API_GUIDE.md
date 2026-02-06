@@ -9,8 +9,7 @@ This API allows you to upload a CV (Resume) in PDF or Image format and instantly
 
 ---
 
-## Endpoint: Extract CV Data
-
+## Endpoint: Extract CV Data (Single or Multiple)
 **URL:** `/api/extract-cv`  
 **Method:** `POST`  
 **Content-Type:** `multipart/form-data`
@@ -19,16 +18,18 @@ This API allows you to upload a CV (Resume) in PDF or Image format and instantly
 
 | Key | Type | Required | Description |
 |-----|------|----------|-------------|
-| `file` | File | Yes | The CV document. Supports `.pdf`, `.jpg`, `.png`, `.jpeg`. |
+| `files` | File[] | Yes | One or more CV documents. Supports `.pdf`, `.jpg`, `.png`, `.jpeg`. |
 
 ### Example Usage
 
 #### 1. Using cURL (Command Line)
 ```bash
+# Upload multiple files by repeating the -F flag
 curl -X POST "http://<YOUR_HOST_ADDRESS>:8000/api/extract-cv" \
   -H "accept: application/json" \
   -H "Content-Type: multipart/form-data" \
-  -F "file=@/path/to/resume.pdf"
+  -F "files=@/path/to/resume1.pdf" \
+  -F "files=@/path/to/resume2.jpg"
 ```
 
 #### 2. Using Postman
@@ -37,43 +38,42 @@ curl -X POST "http://<YOUR_HOST_ADDRESS>:8000/api/extract-cv" \
 3. Set URL to `http://<YOUR_HOST_ADDRESS>:8000/api/extract-cv`.
 4. Go to the **Body** tab.
 5. Select **form-data**.
-6. Set Key to `file` (make sure to select "File" from the dropdown on the right of the key input).
-7. Upload your test PDF or Image in the Value column.
+6. Set Key to `files` (select "File" from dropdown).
+7. You can add multiple rows with the key `files` to upload multiple documents at once.
 8. Click **Send**.
 
 ---
 
 ## Response Usage
-The API returns a JSON object with a `status`, `filename`, and a detailed `extracted_data` object.
+The API returns a JSON object with a `batch_status` and a list of `results` for each file.
 
 ### Sample Success Response (JSON)
 ```json
 {
-  "status": "success",
-  "filename": "candidate_cv.pdf",
-  "extracted_data": {
-    "name": "Ahmed Al-Mansoori",
-    "email": "ahmed.mansoori@example.com",
-    "phone": "+971501234567",
-    "location": "Dubai, UAE",
-    "current_position": "Senior Architect",
-    "total_experience_years": 8.5,
-    "gcc_experience_years": 5.0,
-    "education": [
-      {
-        "degree": "Bachelor of Architecture",
-        "year": "2015"
+  "batch_status": "completed",
+  "total_files": 2,
+  "results": [
+    {
+      "status": "success",
+      "filename": "resume1.pdf",
+      "extracted_data": {
+        "name": "Ahmed Al-Mansoori",
+        "current_position": "Senior Architect",
+        "email": "ahmed@example.com",
+        "phone": "+971500000000",
+        "skills": ["Revit", "AutoCAD"]
+        // ... (rest of extracted fields)
       }
-    ],
-    "skills": [
-      "AutoCAD",
-      "Revit",
-      "SketchUp",
-      "BIM 360"
-    ],
-    "portfolio_url": "https://behance.net/example",
-    "english_proficiency": "Fluent"
-  }
+    },
+    {
+      "status": "success",
+      "filename": "resume2.jpg",
+      "extracted_data": {
+        "name": "Sarah Jones",
+        // ...
+      }
+    }
+  ]
 }
 ```
 

@@ -122,7 +122,9 @@ class EnhancedDataExtractor:
         blacklist = [
             'resume','curriculum','vitae','cv','profile',
             'experience','education','skills','projects',
-            'professional summary','contact','work history'
+            'professional summary','contact','work history',
+            'microsoft office', 'microsoft', 'adobe', 'autocad',
+            'confidential', 'page'
         ]
         
         # 1. Try from email (stable)
@@ -166,6 +168,9 @@ class EnhancedDataExtractor:
                 continue
             words = line.split()
             if 2 <= len(words) <= 4:
+                # Check if it looks like a software list (contains version numbers)
+                if any(c.isdigit() for c in line):
+                    continue
                 if all(re.match(r'^[A-Za-z][A-Za-z.\-]*$', w) for w in words):
                     return line.title()
         
@@ -190,7 +195,8 @@ class EnhancedDataExtractor:
                     break
                 except:
                     pass
-        nationality_pattern = r'(?:nationality|citizen)[:\s]+([a-z]+(?:\s+[a-z]+)?)'
+        # Improved nationality regex to stop at newlines or common delimiters
+        nationality_pattern = r'(?:nationality|citizen)[:\s]+([a-zA-Z]+(?:\s+[a-zA-Z]+)?)(?:[\n\r,.]|$)'
         match = re.search(nationality_pattern, text.lower())
         if match:
             info['nationality'] = match.group(1).strip().title()
@@ -248,8 +254,10 @@ class EnhancedDataExtractor:
             for line in lines[:30]:
                 for kw in ['architect', 'engineer', 'manager', 'designer', 'coordinator', 'specialist']:
                     if kw in line.lower() and len(line.split()) <= 6:
-                        info['current_position'] = line.strip()
-                        break
+                        cleaned = self._clean_header_line(line)
+                        if cleaned:
+                            info['current_position'] = cleaned
+                            break
                 if info.get('current_position'):
                     break
         for d, kws in self.DISCIPLINES.items():
@@ -300,16 +308,22 @@ class EnhancedDataExtractor:
             job['start_date'] = dm.group(1).strip().title()
             job['end_date'] = dm.group(2).strip().title()
             job['duration_months'] = self._calculate_duration(job['start_date'], job['end_date'])
+        
         lines = [l.strip() for l in entry.split('\n') if l.strip()]
         if lines:
-            job['job_title'] = lines[0]
+            # Clean the first line to get job title (removing dates/bullets)
+            job['job_title'] = self._clean_header_line(lines[0])
+            
         job['seniority_level'] = self._determine_seniority(job.get('job_title', ''))
         cm = re.search(r'(?:at|@)\s+([^,\n]+?)(?:,|\n|$)', entry)
         if cm:
             job['company_name'] = cm.group(1).strip()
         else:
             if len(lines) > 1:
-                job['company_name'] = lines[1]
+                # If 2nd line looks like a company (not a bullet point)
+                if not re.match(r'^[-•●]', lines[1]):
+                   job['company_name'] = lines[1]
+                   
         locm = re.search(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', entry)
         if locm:
             job['company_location'] = f"{locm.group(1)}, {locm.group(2)}"
@@ -328,6 +342,21 @@ class EnhancedDataExtractor:
         job['project_locations'] = ['GCC'] if gcc else ['Local']
         return job if job.get('job_title') else None
     
+    def _clean_header_line(self, line: str) -> str:
+        """Removes dates, bullets, and common noise from header lines."""
+        # 1. Remove date ranges (start or end of line)
+        # matches: Jul 2024 - Present, 2019-2024, etc.
+        date_pattern = r'(?:\w+\s+\d{4}|\d{1,2}[-/]\d{4}|\d{4})\s*[-–—to]+\s*(?:\w+\s+\d{4}|\d{1,2}[-/]\d{4}|present|current|\d{4})'
+        line = re.sub(date_pattern, '', line, flags=re.IGNORECASE)
+        
+        # 2. Remove leading bullets/arrows
+        line = re.sub(r'^[\->•●:;|\s]+', '', line)
+        
+        # 3. Remove "at Company" suffix if it exists (heuristic)
+        line = re.sub(r'\s+(?:at|@)\s+.*$', '', line, flags=re.IGNORECASE)
+        
+        return line.strip()
+
     def _calculate_duration(self, start_date: str, end_date: str) -> int:
         try:
             if 'present' in end_date.lower() or 'current' in end_date.lower():
@@ -419,17 +448,25 @@ class EnhancedDataExtractor:
                 if k in ll:
                     if current:
                         out.append(current)
-                    current = {'degree': line.strip()}
+                    
+                    # Clean the degree line (remove dates)
+                    cleaned_degree = self._clean_header_line(line)
+                    current = {'degree': cleaned_degree}
+                    
                     mm = re.search(r'(?:in|of)\s+([A-Za-z\s]+?)(?:\s+from|\s+at|,|\n|$)', line)
                     if mm:
                         current['major'] = mm.group(1).strip()
                     if i+1 < len(lines):
                         current['university'] = lines[i+1].strip()
-                    ym = re.search(r'\b(19|20)\d{2}\b', line)
-                    if not ym and i+1 < len(lines):
-                        ym = re.search(r'\b(19|20)\d{2}\b', lines[i+1])
-                    if ym:
-                        current['graduation_year'] = ym.group(0)
+                    
+                    # Find years (extract the LAST year found, which is typically graduation)
+                    years = re.findall(r'\b(19|20)\d{2}\b', line)
+                    if not years and i+1 < len(lines):
+                        years = re.findall(r'\b(19|20)\d{2}\b', lines[i+1])
+                    
+                    if years:
+                        current['graduation_year'] = years[-1]
+                        
                     rel = ['civil','architecture','mechanical','electrical','engineering']
                     current['relevant_qualification'] = any(r in ll for r in rel)
                     break
