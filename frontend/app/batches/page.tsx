@@ -19,7 +19,7 @@ export default function BatchesPage() {
         return <CheckCircle2 className="w-5 h-5 text-green-600" />;
       case 'processing':
       case 'queued':
-        return <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />;
+        return <Loader2 className="w-5 h-5 text-orange-600 animate-spin" />;
       case 'failed':
         return <XCircle className="w-5 h-5 text-red-600" />;
       default:
@@ -32,7 +32,7 @@ export default function BatchesPage() {
       case 'completed':
         return 'bg-green-100 text-green-800';
       case 'processing':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'queued':
         return 'bg-yellow-100 text-yellow-800';
       case 'failed':
@@ -51,7 +51,7 @@ export default function BatchesPage() {
         </div>
         <Link
           href="/upload"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
         >
           <UploadIcon className="w-5 h-5" />
           Upload New Batch
@@ -60,7 +60,7 @@ export default function BatchesPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center min-h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
         </div>
       ) : !data || data.batches.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -71,7 +71,7 @@ export default function BatchesPage() {
           </p>
           <Link
             href="/upload"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+            className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
           >
             <UploadIcon className="w-5 h-5" />
             Upload CVs
@@ -83,7 +83,7 @@ export default function BatchesPage() {
             <Link
               key={batch.batch_id}
               href={`/batches/${batch.batch_id}`}
-              className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-blue-300 hover:shadow-md transition"
+              className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-orange-300 hover:shadow-md transition"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4 flex-1">
@@ -114,7 +114,7 @@ export default function BatchesPage() {
                       <div className="mt-3 max-w-xs">
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-blue-600 transition-all duration-300"
+                            className="h-full bg-orange-600 transition-all duration-300"
                             style={{ width: `${batch.progress_percentage}%` }}
                           />
                         </div>

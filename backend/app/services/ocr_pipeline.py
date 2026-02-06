@@ -45,14 +45,35 @@ class OCRPipeline:
         extension = file_path.suffix.lower()
         
         # Extract text based on file type
+        try:
+            raw_text = self.extract_text(file_path)
+        except ValueError as e:
+            # Fallback/Error handling or re-raise
+            if "Unsupported file type" in str(e):
+                raise ValueError(f"Unsupported file type: {extension}")
+            raise e
+        
+    def extract_text(self, file_path: Path) -> str:
+        """
+        Extract raw text from a file (PDF or Image).
+        
+        Args:
+            file_path: Path to the file
+            
+        Returns:
+            Extracted text string
+        """
+        file_path = Path(file_path)
+        extension = file_path.suffix.lower()
+        
         if extension == '.pdf':
-            raw_text = self._process_pdf(file_path)
-        elif extension in ['.jpg', '.jpeg', '.png', '.tiff']:
-            raw_text = self._process_image(file_path)
+            return self._process_pdf(file_path)
+        elif extension in ['.jpg', '.jpeg', '.png', '.tiff', '.bmp']:
+            return self._process_image(file_path)
         elif extension in ['.doc', '.docx']:
-            # For DOC/DOCX, convert to PDF first (requires additional library)
+             # For DOC/DOCX, convert to PDF first (requires additional library)
             # Simplified: just return placeholder
-            raw_text = "DOC/DOCX processing not yet implemented"
+            return "DOC/DOCX processing not yet implemented"
         else:
             raise ValueError(f"Unsupported file type: {extension}")
         

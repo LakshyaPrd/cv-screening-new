@@ -13,14 +13,14 @@ export default function CandidateDetailsModal({ isOpen, onClose, match }: Candid
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-blue-600';
+    if (score >= 60) return 'text-orange-600';
     if (score >= 40) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getScoreBg = (score: number) => {
     if (score >= 80) return 'bg-green-50 border-green-200';
-    if (score >= 60) return 'bg-blue-50 border-blue-200';
+    if (score >= 60) return 'bg-blue-50 border-orange-200';
     if (score >= 40) return 'bg-yellow-50 border-yellow-200';
     return 'bg-red-50 border-red-200';
   };
@@ -56,7 +56,7 @@ export default function CandidateDetailsModal({ isOpen, onClose, match }: Candid
             {/* Contact Info */}
             <div className="flex flex-wrap gap-4 mt-3">
               {match.candidate_email && (
-                <a href={`mailto:${match.candidate_email}`} className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">
+                <a href={`mailto:${match.candidate_email}`} className="flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-800 bg-blue-50 px-2 py-1 rounded">
                   <Mail className="w-3.5 h-3.5" />
                   {match.candidate_email}
                 </a>
@@ -160,13 +160,13 @@ export default function CandidateDetailsModal({ isOpen, onClose, match }: Candid
           {match.work_history && match.work_history.length > 0 && (
             <section>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-600" />
+                <Briefcase className="w-5 h-5 text-orange-600" />
                 Work History
               </h3>
               <div className="space-y-4">
                 {match.work_history.map((job, idx) => (
                   <div key={idx} className="relative pl-6 pb-6 border-l-2 border-gray-200 last:border-0 last:pb-0">
-                    <div className="absolute top-0 left-[-9px] w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-500"></div>
+                    <div className="absolute top-0 left-[-9px] w-4 h-4 rounded-full bg-blue-100 border-2 border-orange-500"></div>
                     <div>
                       <h4 className="font-semibold text-gray-900 text-base">{job.job_title}</h4>
                       <div className="text-sm font-medium text-gray-700 mt-1">

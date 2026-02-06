@@ -81,6 +81,62 @@ async def upload_batch(
     return BatchResponse.from_orm(batch)
 
 
+
+@router.post("/extract-cv", status_code=200)
+async def extract_cv_data(
+    file: UploadFile = File(..., description="CV file (PDF or Image)"),
+):
+    """
+    Upload a single CV and get the extracted data immediately (JSON).
+    Does NOT save to database.
+    """
+    import uuid
+    
+    # Create temp directory if not exists
+    temp_dir = Path(settings.UPLOAD_DIR) / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    file_ext = Path(file.filename).suffix
+    if not file_ext:
+        file_ext = ".pdf" # Default to PDF if no extension
+        
+    temp_path = temp_dir / f"{uuid.uuid4()}{file_ext}"
+    
+    try:
+        # Save uploaded file
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Import pipeline here
+        from app.services.ocr_pipeline import OCRPipeline
+        pipeline = OCRPipeline()
+        
+        # Extract text
+        raw_text = pipeline.extract_text(temp_path)
+        
+        # Extract data
+        extracted_data = pipeline.extractor.extract_comprehensive_data(raw_text)
+        
+        return {
+            "status": "success",
+            "filename": file.filename,
+            "extracted_data": extracted_data,
+            # "raw_text": raw_text  # Optional: include raw text if needed
+        }
+        
+    except Exception as e:
+        print(f"Extraction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")
+        
+    finally:
+        # Cleanup
+        if temp_path.exists():
+            try:
+                os.remove(temp_path)
+            except Exception as e:
+                print(f"Failed to delete temp file {temp_path}: {e}")
+
 def process_cv_batch_task(batch_id: str, file_paths: List[str]):
     """
     Background task to process CV batch.
@@ -131,3 +187,4 @@ def process_cv_batch_task(batch_id: str, file_paths: List[str]):
         
     finally:
         db.close()
+

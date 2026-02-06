@@ -113,7 +113,7 @@ export default function UploadPage() {
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-12 text-center transition ${
           isDragging
-            ? 'border-blue-500 bg-blue-50'
+            ? 'border-orange-500 bg-orange-50'
             : 'border-gray-300 hover:border-gray-400'
         }`}
       >
@@ -134,7 +134,7 @@ export default function UploadPage() {
         />
         <label
           htmlFor="file-upload"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition"
+          className="inline-block bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold cursor-pointer hover:bg-orange-700 transition"
         >
           Select Files
         </label>
@@ -151,7 +151,7 @@ export default function UploadPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="e.g., BIM Architect candidates - December 2024"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
       )}
@@ -174,7 +174,7 @@ export default function UploadPage() {
                 key={index}
                 className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
               >
-                <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <FileText className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
@@ -198,7 +198,7 @@ export default function UploadPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-600 transition-all duration-300"
+                        className="h-full bg-orange-600 transition-all duration-300"
                         style={{ width: `${uploadedFile.progress}%` }}
                       />
                     </div>
@@ -224,7 +224,7 @@ export default function UploadPage() {
             <button
               onClick={handleUpload}
               disabled={isUploading || files.some(f => f.status === 'success')}
-              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+              className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
             >
               {isUploading ? 'Uploading...' : `Upload ${files.length} File${files.length > 1 ? 's' : ''}`}
             </button>
@@ -242,9 +242,9 @@ export default function UploadPage() {
       )}
 
       {/* Info Box */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 mb-2">What happens next?</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-8 bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <h4 className="font-semibold text-orange-900 mb-2">What happens next?</h4>
+        <ul className="text-sm text-orange-800 space-y-1">
           <li>• Files are uploaded and queued for processing</li>
           <li>• OCR extracts text from PDFs and images using Tesseract</li>
           <li>• System extracts candidate data (name, email, skills, experience)</li>

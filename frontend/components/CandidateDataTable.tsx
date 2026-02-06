@@ -130,7 +130,7 @@ export default function CandidateDataTable({
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 60) return 'text-blue-600 bg-blue-50';
+    if (score >= 60) return 'text-orange-600 bg-blue-50';
     if (score >= 40) return 'text-yellow-600 bg-yellow-50';
     return 'text-red-600 bg-red-50';
   };
@@ -206,7 +206,7 @@ export default function CandidateDataTable({
                       type="checkbox"
                       checked={selectedMatches.includes(match.match_id)}
                       onChange={() => onToggleSelect(match.match_id)}
-                      className="rounded text-blue-600"
+                      className="rounded text-orange-600"
                     />
                   </td>
                 )}
@@ -214,7 +214,7 @@ export default function CandidateDataTable({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setSelectedCandidate(match)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
+                      className="p-1 text-orange-600 hover:bg-orange-50 rounded transition"
                       title="View Full Details"
                     >
                       <Eye className="w-5 h-5" />
@@ -250,7 +250,7 @@ export default function CandidateDataTable({
                     {match.current_position || match.latest_position || 'N/A'}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {match.discipline && <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded mr-1">{match.discipline}</span>}
+                    {match.discipline && <span className="px-2 py-0.5 bg-blue-100 text-orange-800 rounded mr-1">{match.discipline}</span>}
                     {match.sub_discipline && <span className="text-gray-600">{match.sub_discipline}</span>}
                   </div>
                 </td>
@@ -310,7 +310,7 @@ export default function CandidateDataTable({
                         href={match.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center"
+                        className="text-orange-600 hover:text-orange-800 flex items-center"
                       >
                         <ExternalLink className="w-3 h-3 mr-1" />
                         LinkedIn

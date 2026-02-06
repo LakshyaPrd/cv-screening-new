@@ -4,8 +4,15 @@ Validates file types, sizes, and performs basic security checks.
 """
 from fastapi import UploadFile
 from typing import Dict
-import magic
 from pathlib import Path
+
+# Try to import magic, but make it optional
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except (ImportError, OSError):
+    MAGIC_AVAILABLE = False
+    print("⚠️  python-magic not available. MIME type validation will be skipped.")
 
 from app.config import settings
 
@@ -51,30 +58,31 @@ class FileValidator:
                 "error": "File is empty"
             }
         
-        # MIME type validation
-        try:
-            mime_type = magic.from_buffer(content, mime=True)
-            
-            # Define allowed MIME types
-            allowed_mimes = {
-                'pdf': ['application/pdf'],
-                'jpg': ['image/jpeg'],
-                'jpeg': ['image/jpeg'],
-                'png': ['image/png'],
-                'tiff': ['image/tiff'],
-                'doc': ['application/msword'],
-                'docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            }
-            
-            if file_ext in allowed_mimes:
-                if mime_type not in allowed_mimes[file_ext]:
-                    return {
-                        "valid": False,
-                        "error": f"File content doesn't match extension. Expected {allowed_mimes[file_ext]}, got {mime_type}"
-                    }
-        except Exception as e:
-            # If magic fails, just log and continue (optional check)
-            print(f"MIME type check failed: {e}")
+        # MIME type validation (optional - only if magic is available)
+        if MAGIC_AVAILABLE:
+            try:
+                mime_type = magic.from_buffer(content, mime=True)
+                
+                # Define allowed MIME types
+                allowed_mimes = {
+                    'pdf': ['application/pdf'],
+                    'jpg': ['image/jpeg'],
+                    'jpeg': ['image/jpeg'],
+                    'png': ['image/png'],
+                    'tiff': ['image/tiff'],
+                    'doc': ['application/msword'],
+                    'docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+                }
+                
+                if file_ext in allowed_mimes:
+                    if mime_type not in allowed_mimes[file_ext]:
+                        return {
+                            "valid": False,
+                            "error": f"File content doesn't match extension. Expected {allowed_mimes[file_ext]}, got {mime_type}"
+                        }
+            except Exception as e:
+                # If magic fails, just log and continue (optional check)
+                print(f"MIME type check failed: {e}")
         
         # Basic malware check - check for suspicious patterns
         # In production, integrate with ClamAV or similar

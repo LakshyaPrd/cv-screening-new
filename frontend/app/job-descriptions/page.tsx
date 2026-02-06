@@ -21,7 +21,7 @@ export default function JobDescriptionsPage() {
         </div>
         <Link
           href="/job-descriptions/create"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
         >
           <Plus className="w-5 h-5" />
           Create New JD
@@ -30,7 +30,7 @@ export default function JobDescriptionsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center min-h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
         </div>
       ) : !data || data.job_descriptions.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -41,7 +41,7 @@ export default function JobDescriptionsPage() {
           </p>
           <Link
             href="/job-descriptions/create"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+            className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
           >
             <Plus className="w-5 h-5" />
             Create Job Description
@@ -53,11 +53,11 @@ export default function JobDescriptionsPage() {
             <Link
               key={jd.jd_id}
               href={`/job-descriptions/${jd.jd_id}`}
-              className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-blue-300 hover:shadow-md transition"
+              className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-orange-300 hover:shadow-md transition"
             >
               <div className="flex items-start gap-3 mb-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Briefcase className="w-5 h-5 text-orange-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg text-gray-900">{jd.title}</h3>

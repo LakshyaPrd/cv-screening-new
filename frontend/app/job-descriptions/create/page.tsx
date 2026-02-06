@@ -110,7 +110,7 @@ export default function CreateJobDescriptionPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Senior BIM Architect"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
             </div>
 
@@ -124,7 +124,7 @@ export default function CreateJobDescriptionPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe the role, responsibilities, and requirements..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
             </div>
 
@@ -137,7 +137,7 @@ export default function CreateJobDescriptionPage() {
                 value={formData.location_preference}
                 onChange={(e) => setFormData({ ...formData, location_preference: e.target.value })}
                 placeholder="e.g., Dubai, Remote, Hybrid"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
             </div>
           </div>
@@ -159,12 +159,12 @@ export default function CreateJobDescriptionPage() {
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('must_have_skills', skillInput, setSkillInput))}
                 placeholder="e.g., Revit, BIM"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
               <button
                 type="button"
                 onClick={() => addItem('must_have_skills', skillInput, setSkillInput)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -200,12 +200,12 @@ export default function CreateJobDescriptionPage() {
                 onChange={(e) => setNiceSkillInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('nice_to_have_skills', niceSkillInput, setNiceSkillInput))}
                 placeholder="e.g., Navisworks, 3ds Max"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
               <button
                 type="button"
                 onClick={() => addItem('nice_to_have_skills', niceSkillInput, setNiceSkillInput)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -214,13 +214,13 @@ export default function CreateJobDescriptionPage() {
               {formData.nice_to_have_skills?.map((skill, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
                 >
                   {skill}
                   <button
                     type="button"
                     onClick={() => removeItem('nice_to_have_skills', idx)}
-                    className="hover:text-blue-900"
+                    className="hover:text-orange-900"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -241,12 +241,12 @@ export default function CreateJobDescriptionPage() {
                 onChange={(e) => setToolInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('required_tools', toolInput, setToolInput))}
                 placeholder="e.g., AutoCAD, BIM 360"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
               <button
                 type="button"
                 onClick={() => addItem('required_tools', toolInput, setToolInput)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -282,12 +282,12 @@ export default function CreateJobDescriptionPage() {
                 onChange={(e) => setRoleInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('role_keywords', roleInput, setRoleInput))}
                 placeholder="e.g., BIM Architect, Design Manager"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
               />
               <button
                 type="button"
                 onClick={() => addItem('role_keywords', roleInput, setRoleInput)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -410,7 +410,7 @@ export default function CreateJobDescriptionPage() {
           <button
             type="submit"
             disabled={createMutation.isPending || totalWeight !== 100}
-            className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+            className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {createMutation.isPending ? 'Creating...' : 'Create Job Description'}
           </button>

@@ -28,7 +28,7 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
       </div>
     );
   }
@@ -41,7 +41,7 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
         <p className="text-gray-600 mb-6">The batch you're looking for doesn't exist.</p>
         <Link
           href="/batches"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          className="inline-block bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
         >
           View All Batches
         </Link>
@@ -82,7 +82,7 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/batches" className="text-blue-600 hover:text-blue-700 mb-2 inline-block">
+        <Link href="/batches" className="text-orange-600 hover:text-orange-700 mb-2 inline-block">
           ← Back to Batches
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">Batch Details</h1>
@@ -117,9 +117,9 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
               {batch.processed_files} / {batch.total_files} files
             </span>
           </div>
-          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-600 transition-all duration-300"
+              className="h-full bg-orange-600 transition-all duration-300"
               style={{ width: `${batch.progress_percentage}%` }}
             />
           </div>
@@ -143,8 +143,9 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {/* Candidates List */}
-      {batch.status === 'completed' && candidatesData && candidatesData.candidates.length > 0 && (
+      {/* Candidates List - HIDDEN UNTIL MATCHING */}
+      {/* Candidates are now only visible after matching against a job description */}
+      {false && batch.status === 'completed' && candidatesData && candidatesData.candidates.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Extracted Candidates ({candidatesData.total})
@@ -248,14 +249,34 @@ export default function BatchDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* Processing Message */}
       {(batch.status === 'processing' || batch.status === 'queued') && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-3 animate-spin" />
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
+          <Loader2 className="w-12 h-12 text-orange-600 mx-auto mb-3 animate-spin" />
+          <h3 className="text-lg font-semibold text-orange-900 mb-2">
             Processing in Progress
           </h3>
-          <p className="text-blue-700">
+          <p className="text-orange-700">
             Your CVs are being processed. This page will auto-update when complete.
           </p>
+        </div>
+      )}
+
+      {/* Success Message - Redirects to JD matching */}
+      {batch.status === 'completed' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+          <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Batch Processing Complete!
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {batch.processed_files} CVs have been successfully processed and are ready for matching.
+          </p>
+          <Link
+            href="/job-descriptions"
+            className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
+          >
+            Match Candidates to Job Description
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       )}
     </div>
