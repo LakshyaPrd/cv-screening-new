@@ -96,9 +96,12 @@ async def extract_cv_data(
     temp_dir = Path(settings.UPLOAD_DIR) / "temp"
     temp_dir.mkdir(parents=True, exist_ok=True)
     
-    # Import pipeline here to avoid circular dependency
+    # Import pipeline and ATS parser
     from app.services.ocr_pipeline import OCRPipeline
+    from app.services.ats_parser import ATSParser
+    
     pipeline = OCRPipeline()
+    ats_parser = ATSParser()
     
     results = []
     
@@ -115,11 +118,11 @@ async def extract_cv_data(
             with open(temp_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
                 
-            # Extract text
+            # Extract text using OCR
             raw_text = pipeline.extract_text(temp_path)
             
-            # Extract data
-            extracted_data = pipeline.extractor.extract_comprehensive_data(raw_text)
+            # Parse CV using ATS parser (section-based, no complex regex)
+            extracted_data = ats_parser.parse(raw_text)
             
             results.append({
                 "status": "success",
