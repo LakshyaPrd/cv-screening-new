@@ -9,6 +9,7 @@ import phonenumbers
 from dateutil import parser as date_parser
 
 from app.services.dictionaries import get_skills_dict, get_tools_dict
+from app.services.ats_parser import ATSParser
 
 
 class EnhancedDataExtractor:
@@ -51,6 +52,7 @@ class EnhancedDataExtractor:
     def __init__(self):
         self.skills_dict = [s.lower() for s in get_skills_dict()]
         self.tools_dict = [t.lower() for t in get_tools_dict()]
+        self.ats_parser = ATSParser()  # Use ATS parser for project extraction
         print("✅ Enhanced Data Extractor initialized (pure regex - no dependencies)")
     
     def extract_comprehensive_data(self, text: str) -> Dict[str, Any]:
@@ -63,7 +65,11 @@ class EnhancedDataExtractor:
         education = self._extract_education_detailed(text)
         salary_info = self._extract_salary_info(text)
         evaluation = self._extract_evaluation_criteria(text)
-        
+
+        # Extract structured projects using ATS Parser
+        ats_data = self.ats_parser.parse(text)
+        projects = ats_data.get('projects', [])
+
         return {
             'name': personal_info.get('name'),
             'date_of_birth': personal_info.get('date_of_birth'),
@@ -72,41 +78,42 @@ class EnhancedDataExtractor:
             'military_status': personal_info.get('military_status'),
             'current_country': personal_info.get('current_country'),
             'current_city': personal_info.get('current_city'),
-            
+
             'email': contact_details.get('email'),
             'phone': contact_details.get('phone'),
             'linkedin_url': contact_details.get('linkedin_url'),
             'portfolio_url': contact_details.get('portfolio_url'),
             'behance_url': contact_details.get('behance_url'),
             'location': contact_details.get('location'),
-            
+
             'current_position': position_info.get('current_position'),
             'discipline': position_info.get('discipline'),
             'sub_discipline': position_info.get('sub_discipline'),
-            
+
             'total_experience_years': gcc_experience.get('total_experience_years'),
             'relevant_experience_years': gcc_experience.get('relevant_experience_years'),
             'gcc_experience_years': gcc_experience.get('gcc_experience_years'),
             'worked_on_gcc_projects': gcc_experience.get('worked_on_gcc_projects'),
             'worked_with_mncs': gcc_experience.get('worked_with_mncs'),
-            
+
             'work_history': work_history,
             'software_experience': software_exp,
             'education_details': education,
-            
+            'projects': projects,  # NEW: Structured projects with name, site, role, responsibilities, duration
+
             'skills': self._extract_skills(text),
             'tools': self._extract_tools(text),
             'education': [{'degree': e.get('degree', ''), 'year': e.get('graduation_year', '')} for e in education],
-            'experience': [{'role': w.get('job_title', ''), 'dates': f"{w.get('start_date', '')} - {w.get('end_date', '')}"} 
+            'experience': [{'role': w.get('job_title', ''), 'dates': f"{w.get('start_date', '')} - {w.get('end_date', '')}"}
                            for w in work_history],
             'portfolio_urls': contact_details.get('all_urls', []),
-            
+
             'current_salary_aed': salary_info.get('current_salary_aed'),
             'expected_salary_aed': salary_info.get('expected_salary_aed'),
             'notice_period_days': salary_info.get('notice_period_days'),
             'willing_to_relocate': salary_info.get('willing_to_relocate'),
             'willing_to_travel': salary_info.get('willing_to_travel'),
-            
+
             'portfolio_relevancy_score': evaluation.get('portfolio_relevancy_score'),
             'english_proficiency': evaluation.get('english_proficiency'),
             'soft_skills': evaluation.get('soft_skills'),

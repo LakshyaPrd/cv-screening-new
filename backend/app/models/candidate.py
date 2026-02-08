@@ -73,6 +73,7 @@ class Candidate(Base):
     software_experience = Column(JSON, nullable=True)  # Software with proficiency levels
     education_details = Column(JSON, nullable=True)  # Detailed education + certifications
     soft_skills = Column(JSON, nullable=True)  # List of soft skills
+    projects = Column(JSON, nullable=True)  # Structured project details (name, site, role, responsibilities, duration)
     
     # OCR Data
     raw_text = Column(Text, nullable=True)  # Full OCR output

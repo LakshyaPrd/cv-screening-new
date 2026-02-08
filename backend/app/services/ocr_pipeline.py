@@ -147,7 +147,8 @@ class OCRPipeline:
             software_experience=extracted_data.get('software_experience', []),
             education_details=extracted_data.get('education_details', []),
             soft_skills=extracted_data.get('soft_skills', []),
-            
+            projects=extracted_data.get('projects', []),  # NEW: Structured projects
+
             # OCR Data
             raw_text=raw_text,
             ocr_quality_score=ocr_quality,
