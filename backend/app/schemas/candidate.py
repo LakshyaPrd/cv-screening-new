@@ -105,27 +105,28 @@ class CandidateResponse(CandidateBase):
     """Schema for candidate response with all comprehensive data."""
     candidate_id: UUID
     batch_id: UUID
-    
+
     # Legacy fields (for backward compatibility)
     skills: Optional[List[str]]
     tools: Optional[List[str]]
     education: Optional[List[Dict[str, Any]]]
     experience: Optional[List[Dict[str, Any]]]
     portfolio_urls: Optional[List[str]]
-    
+
     # Enhanced structured fields
     work_history: Optional[List[Dict[str, Any]]]
     software_experience: Optional[List[Dict[str, Any]]]
     education_details: Optional[List[Dict[str, Any]]]
     soft_skills: Optional[List[str]]
-    
+    projects: Optional[List[Dict[str, Any]]]  # NEW: Structured projects
+
     # Metadata
     ocr_quality_score: Optional[float]
     extraction_status: str
     cv_file_path: Optional[str]
     portfolio_file_path: Optional[str]
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

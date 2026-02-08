@@ -50,52 +50,63 @@ class MatchResultWithCandidate(MatchResultResponse):
     candidate_email: Optional[str]
     candidate_phone: Optional[str]
     candidate_location: Optional[str]
-    
+    batch_id: Optional[UUID]  # NEW: Batch reference
+
     # Personal Information
     nationality: Optional[str]
     current_city: Optional[str]
     current_country: Optional[str]
     marital_status: Optional[str]
-    
+
     # Position & Discipline
     current_position: Optional[str]
     discipline: Optional[str]
     sub_discipline: Optional[str]
-    
+
+    # Professional Summary
+    summary: Optional[str]  # NEW: Professional summary from ATS parser
+
     # Experience Metrics
     total_experience_years: Optional[float]
     relevant_experience_years: Optional[float]
     gcc_experience_years: Optional[float]
     worked_on_gcc_projects: Optional[bool]
     worked_with_mncs: Optional[bool]
-    
+
     # Work History (summary)
     work_history: Optional[List[Dict[str, Any]]]
     latest_company: Optional[str]
     latest_position: Optional[str]
-    
-    # Software Skills (top 5)
+
+    # Projects (NEW - structured project data)
+    projects: Optional[List[Dict[str, Any]]]
+
+    # Skills & Tools
+    skills: Optional[List[str]]  # NEW: All extracted skills
+    tools: Optional[List[str]]  # NEW: All extracted tools
     software_experience: Optional[List[Dict[str, Any]]]
     top_software: Optional[List[str]]
-    
-    # Education
+
+    # Education & Certifications
     education_details: Optional[List[Dict[str, Any]]]
     highest_degree: Optional[str]
-    
+    certifications: Optional[List[str]]  # NEW: Certifications
+
     # Salary & Availability
     expected_salary_aed: Optional[float]
     notice_period_days: Optional[int]
     willing_to_relocate: Optional[bool]
     willing_to_travel: Optional[bool]
-    
+
     # Evaluation
     portfolio_relevancy_score: Optional[float]
     english_proficiency: Optional[str]
     soft_skills: Optional[List[str]]
-    
+
     # Links
     linkedin_url: Optional[str]
     portfolio_url: Optional[str]
+    portfolio_urls: Optional[List[str]]  # NEW: All portfolio URLs
     behance_url: Optional[str]
 
 

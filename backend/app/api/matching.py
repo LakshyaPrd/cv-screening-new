@@ -52,6 +52,7 @@ async def match_candidates_to_jd(
 @router.get("/jd/{jd_id}/matches", response_model=MatchListResponse)
 async def get_matched_candidates(
     jd_id: UUID,
+    batch_id: Optional[UUID] = Query(None, description="Filter by specific batch"),
     min_score: Optional[float] = Query(None, ge=0, le=100),
     is_shortlisted: Optional[bool] = None,
     page: int = Query(1, ge=1),
@@ -60,6 +61,7 @@ async def get_matched_candidates(
 ):
     """
     Get ranked candidates for a job description with optional filtering.
+    Can filter by batch_id to show only candidates from a specific batch.
     """
     # Build query
     query = (
@@ -67,11 +69,14 @@ async def get_matched_candidates(
         .join(Candidate, MatchResult.candidate_id == Candidate.candidate_id)
         .filter(MatchResult.jd_id == jd_id)
     )
-    
+
     # Apply filters
+    if batch_id is not None:
+        query = query.filter(Candidate.batch_id == batch_id)
+
     if min_score is not None:
         query = query.filter(MatchResult.total_score >= min_score)
-    
+
     if is_shortlisted is not None:
         query = query.filter(MatchResult.is_shortlisted == is_shortlisted)
     
@@ -132,58 +137,69 @@ async def get_matched_candidates(
             crm_synced=match_result.crm_synced,
             crm_id=match_result.crm_id,
             created_at=match_result.created_at,
-            
+
             # Basic candidate info
             candidate_name=candidate.name,
             candidate_email=candidate.email,
             candidate_phone=candidate.phone,
             candidate_location=candidate.location,
-            
+            batch_id=candidate.batch_id,  # NEW
+
             # Personal Information
             nationality=candidate.nationality,
             current_city=candidate.current_city,
             current_country=candidate.current_country,
             marital_status=candidate.marital_status,
-            
+
             # Position & Discipline
             current_position=candidate.current_position,
             discipline=candidate.discipline,
             sub_discipline=candidate.sub_discipline,
-            
+
+            # Professional Summary (NEW)
+            summary=candidate.experience[0].get('description') if candidate.experience and len(candidate.experience) > 0 else None,
+
             # Experience Metrics
             total_experience_years=candidate.total_experience_years,
             relevant_experience_years=candidate.relevant_experience_years,
             gcc_experience_years=candidate.gcc_experience_years,
             worked_on_gcc_projects=to_bool(candidate.worked_on_gcc_projects),
             worked_with_mncs=to_bool(candidate.worked_with_mncs),
-            
+
             # Work History
             work_history=candidate.work_history,
             latest_company=latest_company,
             latest_position=latest_position,
-            
-            # Software Skills
+
+            # Projects (NEW - structured project data)
+            projects=candidate.projects or [],
+
+            # Skills & Tools (NEW)
+            skills=candidate.skills or [],
+            tools=candidate.tools or [],
             software_experience=candidate.software_experience,
             top_software=top_software,
-            
-            # Education
+
+            # Education & Certifications
             education_details=candidate.education_details,
             highest_degree=highest_degree,
-            
+            certifications=candidate.education_details[0].get('certifications', []) if candidate.education_details and len(candidate.education_details) > 0 else [],
+
             # Salary & Availability
             expected_salary_aed=candidate.expected_salary_aed,
             notice_period_days=candidate.notice_period_days,
             willing_to_relocate=to_bool(candidate.willing_to_relocate),
             willing_to_travel=to_bool(candidate.willing_to_travel),
-            
+
             # Evaluation
             portfolio_relevancy_score=candidate.portfolio_relevancy_score,
             english_proficiency=candidate.english_proficiency,
             soft_skills=candidate.soft_skills,
-            
+
             # Links
             linkedin_url=candidate.linkedin_url,
             portfolio_url=candidate.portfolio_url,
+            portfolio_urls=candidate.portfolio_urls or [],  # NEW
             behance_url=candidate.behance_url,
         )
         matches.append(match_data)
