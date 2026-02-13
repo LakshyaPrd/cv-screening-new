@@ -6,7 +6,9 @@ import os
 
 from app.config import settings
 from app.database import init_db
+from app.mongodb import connect_mongodb, close_mongodb
 from app.api import upload, batch, job_description, matching, admin
+from app.api import process_cv
 
 
 @asynccontextmanager
@@ -23,10 +25,15 @@ async def lifespan(app: FastAPI):
     # Initialize database
     init_db()
     print("✅ Database initialized")
-    
+
+    # Initialize MongoDB
+    await connect_mongodb()
+    print("✅ MongoDB connected")
+
     yield
-    
+
     # Shutdown
+    await close_mongodb()
     print("👋 Shutting down...")
 
 
@@ -66,6 +73,7 @@ app.include_router(batch.router, prefix="/api", tags=["Batch Management"])
 app.include_router(job_description.router, prefix="/api", tags=["Job Descriptions"])
 app.include_router(matching.router, prefix="/api", tags=["Matching & Ranking"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
+app.include_router(process_cv.router, prefix="/api", tags=["Process CV"])
 
 
 @app.get("/")

@@ -66,9 +66,29 @@ class EnhancedDataExtractor:
         salary_info = self._extract_salary_info(text)
         evaluation = self._extract_evaluation_criteria(text)
 
-        # Extract structured projects using ATS Parser
+        # AI-enhanced extraction via ATS Parser (includes AI merge)
         ats_data = self.ats_parser.parse(text)
         projects = ats_data.get('projects', [])
+        ai_enhanced = ats_data.get('ai_enhanced', False)
+        confidence_score = ats_data.get('confidence_score', 0)
+        ai_status = ats_data.get('status', 'success')
+
+        # Use AI-enhanced summary if available and better
+        summary = ats_data.get('summary')
+
+        # Use AI-enhanced experience if it has more job_title matches
+        ai_experience = ats_data.get('experience', [])
+        ai_exp_with_title = [e for e in ai_experience if e.get('job_title')]
+        rule_exp_with_title = [e for e in work_history if e.get('job_title')]
+        best_experience = ai_experience if len(ai_exp_with_title) > len(rule_exp_with_title) else work_history
+
+        # Use AI-enhanced education if richer
+        ai_education = ats_data.get('education', [])
+
+        # Merge skills: rule-based tools + AI skills
+        rule_skills = set(s.lower() for s in self._extract_skills(text))
+        ai_skills = set(s.lower() for s in (ats_data.get('skills') or []))
+        merged_skills = list(rule_skills | ai_skills)
 
         return {
             'name': personal_info.get('name'),
@@ -96,12 +116,12 @@ class EnhancedDataExtractor:
             'worked_on_gcc_projects': gcc_experience.get('worked_on_gcc_projects'),
             'worked_with_mncs': gcc_experience.get('worked_with_mncs'),
 
-            'work_history': work_history,
+            'work_history': best_experience,
             'software_experience': software_exp,
-            'education_details': education,
-            'projects': projects,  # NEW: Structured projects with name, site, role, responsibilities, duration
+            'education_details': education if len(education) >= len(ai_education) else ai_education,
+            'projects': projects,
 
-            'skills': self._extract_skills(text),
+            'skills': merged_skills,
             'tools': self._extract_tools(text),
             'education': [{'degree': e.get('degree', ''), 'year': e.get('graduation_year', '')} for e in education],
             'experience': [{'role': w.get('job_title', ''), 'dates': f"{w.get('start_date', '')} - {w.get('end_date', '')}"}
@@ -117,6 +137,11 @@ class EnhancedDataExtractor:
             'portfolio_relevancy_score': evaluation.get('portfolio_relevancy_score'),
             'english_proficiency': evaluation.get('english_proficiency'),
             'soft_skills': evaluation.get('soft_skills'),
+
+            # AI metadata
+            'ai_enhanced': ai_enhanced,
+            'confidence_score': confidence_score,
+            'ai_status': ai_status,
         }
     
     # ===================================================================

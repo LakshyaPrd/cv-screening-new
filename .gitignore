@@ -44,3 +44,5 @@ celerybeat.pid
 
 # OCR temp files
 ocr_temp/
+nul
+.claude

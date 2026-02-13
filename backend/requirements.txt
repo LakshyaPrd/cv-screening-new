@@ -26,9 +26,14 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 email-validator==2.1.0
 
-# HTTP Client for CRM
+# HTTP Client for CRM & AI
 httpx==0.26.0
 aiohttp==3.9.1
+requests==2.31.0
+
+# MongoDB
+motor==3.3.2
+pymongo==4.6.1
 
 # Utilities
 phonenumbers==8.13.27

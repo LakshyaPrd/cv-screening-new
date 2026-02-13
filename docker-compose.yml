@@ -20,6 +20,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # MongoDB for candidate profiles
+  mongodb:
+    image: mongo:7
+    container_name: cv_screening_mongo
+    restart: always
+    ports:
+      - "27018:27017"  # 27018 to avoid conflict
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Redis for caching and Celery broker
   redis:
     image: redis:7-alpine
@@ -54,10 +69,17 @@ services:
       - CORS_ORIGINS=http://localhost:3006,http://76.13.17.251:3006  # UPDATE THIS
       - TESSERACT_PATH=/usr/bin/tesseract
       - POPPLER_PATH=/usr/bin
+      - GEMINI_API_KEY=AIzaSyCJJYu6DJDViDGPBD8YWeG8LZceT9MWpo4
+      - GEMINI_ENABLED=True
+      - GEMINI_TIMEOUT=60
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=cv_screening
     volumes:
       - uploads:/app/uploads
     depends_on:
       postgres:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -88,10 +110,14 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=cv_screening
     volumes:
       - uploads:/app/uploads
     depends_on:
       postgres:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -99,5 +125,6 @@ services:
 
 volumes:
   postgres_data:
+  mongo_data:
   redis_data:
   uploads:

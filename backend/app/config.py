@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000"
     
+    # Google Gemini AI Parser
+    GEMINI_API_KEY: str = ""
+    GEMINI_ENABLED: bool = True
+    GEMINI_TIMEOUT: int = 60
+
+    # MongoDB
+    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_DB_NAME: str = "cv_screening"
+
     # CRM Integration
     CRM_TYPE: str = "salesforce"
     CRM_API_URL: str = ""
