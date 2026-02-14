@@ -147,7 +147,7 @@ RESUME TEXT:
         return text[:self.MAX_INPUT_CHARS].strip()
 
     # ==========================================================
-    # API CALL — WITH NATIVE JSON MODE + RETRY
+    # API CALL — WITH RETRY
     # ==========================================================
     def _call_api(self, prompt: str, retry_count: int = 3) -> Optional[str]:
 
@@ -158,7 +158,6 @@ RESUME TEXT:
             "generationConfig": {
                 "temperature": 0.1,
                 "maxOutputTokens": 8192,
-                "responseMimeType": "application/json",
             },
         }
 
