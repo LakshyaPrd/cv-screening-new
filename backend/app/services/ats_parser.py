@@ -159,8 +159,15 @@ class ATSParser:
         return None
 
     def _extract_linkedin(self, text):
-        m = re.search(r"https?://[^\s]*linkedin[^\s]*", text)
-        return m.group(0) if m else None
+        # Try full URL first
+        m = re.search(r"https?://[^\s]*linkedin\.com[^\s]*", text)
+        if m:
+            return m.group(0)
+        # Try without protocol (linkedin.com/in/username)
+        m = re.search(r"(?:www\.)?linkedin\.com/in/[^\s,;)\"']+", text, re.IGNORECASE)
+        if m:
+            return "https://" + m.group(0)
+        return None
 
     def _extract_urls(self, text):
         return re.findall(r"https?://[^\s<>\"']+", text)
