@@ -1,12 +1,17 @@
 """
 OCR Pipeline for processing CVs and portfolios.
-Handles PDF conversion, image preprocessing, OCR, and data extraction.
+Handles PDF text extraction, image preprocessing, OCR, and data extraction.
+Uses pdfplumber for embedded text (primary) + Tesseract OCR (fallback).
 """
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 import pytesseract
+import pdfplumber
 from PIL import Image
 from pdf2image import convert_from_path
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -164,33 +169,73 @@ class OCRPipeline:
     
     def _process_pdf(self, pdf_path: Path) -> str:
         """
-        Convert PDF to images and perform OCR.
+        Extract text from PDF using pdfplumber (embedded text) first.
+        Falls back to Tesseract OCR if pdfplumber extracts too little text.
+        This ensures modern CVs with embedded text (icons, sidebars) are read correctly.
         """
+        # Step 1: Try pdfplumber (reads embedded text directly — much more accurate)
+        plumber_text = self._extract_with_pdfplumber(pdf_path)
+
+        # Step 2: Try Tesseract OCR
+        ocr_text = self._extract_with_tesseract(pdf_path)
+
+        # Step 3: Use whichever got more text, or combine both
+        plumber_len = len(plumber_text.strip()) if plumber_text else 0
+        ocr_len = len(ocr_text.strip()) if ocr_text else 0
+
+        if plumber_len > 200 and plumber_len >= ocr_len:
+            logger.info(f"Using pdfplumber text ({plumber_len} chars)")
+            return plumber_text
+        elif ocr_len > 200 and ocr_len > plumber_len:
+            logger.info(f"Using Tesseract OCR text ({ocr_len} chars)")
+            return ocr_text
+        elif plumber_len > 0 and ocr_len > 0:
+            # Combine both — pdfplumber might have sidebar text that OCR missed
+            logger.info(f"Combining pdfplumber ({plumber_len}) + OCR ({ocr_len})")
+            return plumber_text + "\n\n" + ocr_text
+        elif plumber_len > 0:
+            return plumber_text
+        elif ocr_len > 0:
+            return ocr_text
+        else:
+            raise Exception("PDF text extraction failed: no text extracted")
+
+    def _extract_with_pdfplumber(self, pdf_path: Path) -> str:
+        """Extract embedded text from PDF using pdfplumber."""
         try:
-            # Convert PDF to images
+            full_text = []
+            with pdfplumber.open(str(pdf_path)) as pdf:
+                for i, page in enumerate(pdf.pages):
+                    page_text = page.extract_text() or ""
+                    if page_text.strip():
+                        full_text.append(page_text)
+            return "\n\n".join(full_text)
+        except Exception as e:
+            logger.warning(f"pdfplumber extraction failed: {e}")
+            return ""
+
+    def _extract_with_tesseract(self, pdf_path: Path) -> str:
+        """Convert PDF to images and perform Tesseract OCR."""
+        try:
             images = convert_from_path(
                 str(pdf_path),
                 dpi=self.dpi,
                 poppler_path=settings.POPPLER_PATH if hasattr(settings, 'POPPLER_PATH') else None
             )
-            
-            # Perform OCR on each page
+
             full_text = []
             for i, image in enumerate(images):
-                # Preprocess image
                 processed_image = self._preprocess_image(image)
-                
-                # OCR
                 page_text = pytesseract.image_to_string(
                     processed_image,
                     lang=self.languages
                 )
-                full_text.append(f"--- Page {i + 1} ---\n{page_text}")
-            
+                full_text.append(page_text)
+
             return "\n\n".join(full_text)
-            
         except Exception as e:
-            raise Exception(f"PDF OCR failed: {str(e)}")
+            logger.warning(f"Tesseract OCR failed: {e}")
+            return ""
     
     def _process_image(self, image_path: Path) -> str:
         """

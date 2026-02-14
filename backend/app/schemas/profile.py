@@ -57,8 +57,8 @@ class ExtractedData(BaseModel):
 # Computed Metrics (from ProfileEvaluator)
 # ------------------------------------------------------------------
 class SoftwareExperience(BaseModel):
-    years: float = 0.0
-    proficiency: str = "Basic"
+    years: Any = "Not Specified"
+    proficiency: str = "Not Specified"
 
 
 class ComputedMetrics(BaseModel):
@@ -67,7 +67,6 @@ class ComputedMetrics(BaseModel):
     seniority_level: str = "Junior"
     mnc_experience: bool = False
     software_experience: Dict[str, SoftwareExperience] = {}
-    portfolio_relevancy_score: int = 0
     english_proficiency: str = "Intermediate"
 
 
