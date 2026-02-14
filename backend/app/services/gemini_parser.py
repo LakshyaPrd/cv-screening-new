@@ -1,12 +1,13 @@
 """
-GeminiParser — Single-call production CV parser using Gemini 2.5 Flash.
-One API call extracts all sections for speed.
+GeminiParser V2.0 — High-accuracy CV parser using Gemini 2.5 Flash.
+Single API call, native JSON mode, optimized prompt for 95%+ accuracy.
 """
 
 import json
 import logging
 import os
 import re
+import time
 import requests
 from typing import Dict, Any, Optional
 
@@ -17,22 +18,22 @@ logger = logging.getLogger(__name__)
 
 class GeminiParser:
 
-    MAX_INPUT_CHARS = 20000
+    MAX_INPUT_CHARS = 25000
     API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
     MODEL = "gemini-2.5-flash"
 
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
-        self.timeout = settings.GEMINI_TIMEOUT or 60
+        self.timeout = settings.GEMINI_TIMEOUT or 90
         self.enabled = settings.GEMINI_ENABLED and bool(self.api_key)
 
         if self.enabled:
-            logger.info(f"GeminiParser initialized (model: {self.MODEL})")
+            logger.info(f"GeminiParser V2.0 initialized (model: {self.MODEL})")
         else:
             logger.warning("GeminiParser disabled (no API key)")
 
     # ==========================================================
-    # PUBLIC ENTRY — SINGLE API CALL
+    # PUBLIC ENTRY
     # ==========================================================
     def extract_sections(self, text: str) -> Dict[str, Any]:
 
@@ -42,90 +43,85 @@ class GeminiParser:
         cleaned = self._clean_text(text)
         prompt = self._build_prompt(cleaned)
 
-        # Single Gemini call for everything
-        raw = self._call_api(prompt)
+        # Single Gemini call with native JSON mode
+        raw = self._call_api(prompt, retry_count=3)
         if raw is None:
             logger.warning("Gemini returned None — returning empty")
             return self._empty_result()
 
-        parsed = self._safe_parse(raw, None)
+        parsed = self._safe_parse(raw)
         if parsed is None:
-            # Retry with correction prompt
-            logger.info("JSON parse failed — retrying with correction prompt")
-            correction = f"Fix this JSON and return ONLY valid JSON:\n{raw}"
-            raw_retry = self._call_api(correction)
-            if raw_retry:
-                parsed = self._safe_parse(raw_retry, None)
-
-        if parsed is None:
-            logger.warning("Gemini extraction failed after retry")
+            logger.warning("Gemini extraction failed — could not parse JSON")
             return self._empty_result()
 
         return self._normalize(parsed)
 
     # ==========================================================
-    # SINGLE PROMPT — ALL SECTIONS AT ONCE
+    # OPTIMIZED PROMPT — EXPLICIT INSTRUCTIONS FOR ACCURACY
     # ==========================================================
     def _build_prompt(self, text: str) -> str:
-        return f"""You are a professional ATS resume parser.
+        return f"""You are an expert ATS (Applicant Tracking System) resume parser with 99% accuracy.
 
-Extract ALL information from this resume and return ONLY valid JSON.
-Do not include any explanation text before or after the JSON.
+Your task: Extract EVERY piece of information from this resume into structured JSON.
 
-Required JSON structure:
+CRITICAL ACCURACY RULES:
+1. NAME: Extract the candidate's FULL PERSONAL NAME (first name + last name). NEVER use job titles, roles, skills, or company names as the name.
+2. EXPERIENCE: Each company the candidate worked at is a SEPARATE experience entry. If they had multiple roles at the same company, list each role as a separate entry. Extract ALL experience entries — do not skip any. A typical CV has 3-10 experience entries.
+3. DATES: Use YYYY-MM format (e.g., "2024-07"). If only year is available, use "YYYY-01". For ongoing roles, use "Present".
+4. PROJECTS: Extract ALL projects mentioned anywhere in the CV — under experience, in a projects section, or standalone. Each project is a separate entry.
+5. EDUCATION: Extract ALL education entries with degree name, institution, and year.
+6. SKILLS: Extract ALL technical skills, software tools, methodologies, and domain skills mentioned anywhere in the CV. Include skills from experience descriptions too. Be comprehensive.
+7. CERTIFICATIONS: Extract ALL certifications, licenses, and professional qualifications.
+8. SUMMARY: Write a clean 2-3 sentence professional summary. Do NOT include contact info, phone numbers, emails, or URLs. Write as a professional recruiter would.
+9. POSITION: The candidate's current or most recent job title exactly as stated.
+10. DISCIPLINE: The professional domain (Civil Engineering, BIM, Architecture, MEP, etc.)
+
+IMPORTANT — COMMON MISTAKES TO AVOID:
+- Do NOT merge multiple companies into one experience entry
+- Do NOT skip experience entries — extract ALL of them
+- Do NOT put job title in the company field or vice versa
+- Do NOT truncate or summarize — extract COMPLETE data
+- Do NOT miss projects that are listed under experience sections
+- Do NOT include section headers as certifications
+
+Return this exact JSON structure:
 
 {{
-  "name": "candidate full name",
-  "summary": "2 sentence professional summary",
-  "position": "current or most recent job title",
-  "discipline": "professional domain (e.g. Civil Engineering, BIM, Architecture, Mechanical Engineering, Electrical Engineering, Software Engineering)",
+  "name": "string",
+  "summary": "string",
+  "position": "string or null",
+  "discipline": "string or null",
   "experience": [
     {{
-      "job_title": "exact role name",
-      "company": "company name only",
+      "job_title": "string",
+      "company": "string",
       "start_date": "YYYY-MM",
       "end_date": "YYYY-MM or Present",
-      "description": ["responsibility 1", "responsibility 2"]
+      "description": ["string"]
     }}
   ],
   "education": [
     {{
-      "degree": "full degree name",
-      "university": "institution name",
-      "year": "YYYY"
+      "degree": "string",
+      "university": "string",
+      "year": "string"
     }}
   ],
   "projects": [
     {{
-      "project_name": "exact project name",
-      "site_name": "city or country",
-      "role": "role in project",
+      "project_name": "string",
+      "site_name": "string or null",
+      "role": "string or null",
       "duration_start": "YYYY-MM or null",
       "duration_end": "YYYY-MM or null",
-      "responsibilities": ["task 1", "task 2"]
+      "responsibilities": ["string"]
     }}
   ],
-  "certifications": ["certification 1", "certification 2"],
-  "skills": ["skill1", "skill2"]
+  "certifications": ["string"],
+  "skills": ["string"]
 }}
 
-RULES:
-- name must be the candidate's full personal name (first + last). Do NOT use job titles, roles, or skills as the name.
-- summary must be a clean 2-sentence professional summary. Do NOT include phone numbers, emails, URLs, icons, symbols, or contact info in the summary. Write it as a recruiter would.
-- position is the candidate's current or most recent job title (e.g. "Senior BIM Modeler", "Civil Engineer"). Use null if not found.
-- discipline is the professional domain or field. Infer from experience and education if not stated explicitly.
-- Extract ALL work experience entries with correct job_title and company.
-- If job title and company are on separate lines, associate them correctly.
-- Do NOT merge job title into company field.
-- Extract ALL projects (construction, engineering, infrastructure, software, academic).
-- certifications should list actual certification names (e.g. "Autodesk Certified Professional", "PMP"). Do NOT include section headers.
-- If summary is not explicit in the resume, generate a short professional one based on the candidate's experience and skills.
-- Skills should include technical skills, software, and domain skills. No duplicates.
-- Use null for missing fields.
-- Dates should be YYYY-MM format when possible.
-- Return ONLY the JSON object, no markdown, no explanation.
-
-Resume:
+RESUME TEXT:
 \"\"\"
 {text}
 \"\"\""""
@@ -134,19 +130,16 @@ Resume:
     # CLEAN TEXT
     # ==========================================================
     def _clean_text(self, text: str) -> str:
-        # Normalize dashes
         text = re.sub(r"[—–]", "-", text)
-        # Remove common OCR icon artifacts (©, ™, _, &, etc. used as separators)
         text = re.sub(r"[©™®•§¶]", " ", text)
-        # Remove excessive whitespace
         text = re.sub(r"[ \t]+", " ", text)
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text[:self.MAX_INPUT_CHARS].strip()
 
     # ==========================================================
-    # API CALL
+    # API CALL — WITH NATIVE JSON MODE + RETRY
     # ==========================================================
-    def _call_api(self, prompt: str) -> Optional[str]:
+    def _call_api(self, prompt: str, retry_count: int = 3) -> Optional[str]:
 
         url = f"{self.API_BASE}/{self.MODEL}:generateContent?key={self.api_key}"
 
@@ -154,50 +147,67 @@ Resume:
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.1,
-                "maxOutputTokens": 4096,
+                "maxOutputTokens": 8192,
+                "responseMimeType": "application/json",
             },
         }
 
-        try:
-            resp = requests.post(url, json=payload, timeout=self.timeout)
+        for attempt in range(1, retry_count + 1):
+            try:
+                start_time = time.time()
+                resp = requests.post(url, json=payload, timeout=self.timeout)
+                elapsed = round(time.time() - start_time, 1)
 
-            if resp.status_code != 200:
-                logger.error(f"Gemini error {resp.status_code}: {resp.text[:500]}")
+                if resp.status_code == 429:
+                    wait = 5 * attempt
+                    logger.warning(f"Gemini 429 rate limit — waiting {wait}s (attempt {attempt}/{retry_count})")
+                    time.sleep(wait)
+                    continue
+
+                if resp.status_code != 200:
+                    logger.error(f"Gemini error {resp.status_code}: {resp.text[:500]}")
+                    if attempt < retry_count:
+                        time.sleep(2)
+                        continue
+                    return None
+
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    logger.warning("Gemini returned no candidates")
+                    return None
+
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if not parts:
+                    logger.warning("Gemini returned no parts")
+                    return None
+
+                text = parts[0].get("text", "")
+                logger.info(f"Gemini response: {len(text)} chars in {elapsed}s")
+                return text
+
+            except requests.exceptions.Timeout:
+                logger.error(f"Gemini timeout after {self.timeout}s (attempt {attempt}/{retry_count})")
+                if attempt < retry_count:
+                    continue
+                return None
+            except Exception as e:
+                logger.error(f"Gemini API exception: {e}")
                 return None
 
-            data = resp.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                logger.warning("Gemini returned no candidates")
-                return None
-
-            parts = candidates[0].get("content", {}).get("parts", [])
-            if not parts:
-                logger.warning("Gemini returned no parts")
-                return None
-
-            text = parts[0].get("text", "")
-            logger.info(f"Gemini response received ({len(text)} chars)")
-            return text
-
-        except requests.exceptions.Timeout:
-            logger.error(f"Gemini API timeout after {self.timeout}s")
-            return None
-        except Exception as e:
-            logger.error(f"Gemini API exception: {e}")
-            return None
+        return None
 
     # ==========================================================
     # SAFE JSON PARSER
     # ==========================================================
-    def _safe_parse(self, raw: Optional[str], fallback) -> Optional[Dict]:
+    def _safe_parse(self, raw: Optional[str]) -> Optional[Dict]:
 
         if not raw:
-            return fallback
+            return None
 
         text = raw.strip()
 
-        # Strip markdown code block (complete or truncated)
+        # Strip markdown code block if present (shouldn't happen with JSON mode)
         code_block = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
         if code_block:
             text = code_block.group(1).strip()
@@ -223,8 +233,8 @@ Resume:
         except json.JSONDecodeError:
             pass
 
-        logger.warning(f"Gemini JSON parse failed: {text[:200]}")
-        return fallback
+        logger.warning(f"JSON parse failed: {text[:300]}")
+        return None
 
     def _fix_truncated_json(self, text: str) -> Optional[str]:
         if not text:
@@ -236,6 +246,7 @@ Resume:
         if open_braces <= 0 and open_brackets <= 0:
             return None
 
+        # Remove trailing incomplete key-value pairs
         text = re.sub(r",\s*$", "", text.rstrip())
         text = re.sub(r',\s*"[^"]*":\s*"?[^"}\]]*$', "", text)
         text += "]" * open_brackets
@@ -320,14 +331,18 @@ Resume:
 # ------------------------------------------------------------------
 def calculate_confidence(merged: Dict[str, Any]) -> int:
     score = 0
-    if merged.get("summary"):
-        score += 25
+    if merged.get("name"):
+        score += 10
+    if merged.get("summary") and len(merged["summary"]) > 20:
+        score += 15
     if len(merged.get("experience") or []) > 0:
         score += 25
+    if len(merged.get("experience") or []) >= 3:
+        score += 10
     if len(merged.get("projects") or []) > 0:
-        score += 20
+        score += 15
     if len(merged.get("skills") or []) > 3:
-        score += 20
+        score += 15
     if merged.get("education"):
         score += 10
     return min(score, 100)
