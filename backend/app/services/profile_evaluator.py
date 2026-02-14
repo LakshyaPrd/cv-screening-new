@@ -158,46 +158,22 @@ class ProfileEvaluator:
         self, skills: List[str], experience_list: List[Dict]
     ) -> Dict[str, Dict[str, Any]]:
         """
-        If software mentioned in a job description, assume used during that job duration.
-        Aggregate years per software. Assign proficiency.
+        List software found in the candidate's skills.
+        Years/proficiency only if explicitly stated in CV — otherwise 'Not Specified'.
         """
-        software_years: Dict[str, float] = {}
+        software_found: Dict[str, Dict[str, Any]] = {}
 
         for sw in KNOWN_SOFTWARE:
             sw_lower = sw.lower()
-            # Check if this software appears in skills
             if not any(sw_lower in s for s in skills):
                 continue
 
-            total_months = 0
-            for exp in experience_list:
-                desc_text = " ".join(exp.get("description") or []).lower()
-                company = (exp.get("company") or "").lower()
-                title = (exp.get("job_title") or "").lower()
-                combined = f"{desc_text} {company} {title}"
+            software_found[sw] = {
+                "years": "Not Specified",
+                "proficiency": "Not Specified",
+            }
 
-                # Check if software mentioned in this job's context
-                if sw_lower in combined or sw_lower in skills:
-                    start = self._parse_date(exp.get("start_date"))
-                    end = self._parse_date(exp.get("end_date"))
-                    if start is None:
-                        continue
-                    if end is None:
-                        end = datetime.now()
-                    diff = (end.year - start.year) * 12 + (end.month - start.month)
-                    if diff > 0:
-                        total_months += diff
-
-            if total_months > 0:
-                years = round(total_months / 12, 1)
-            else:
-                # Software in skills but not in any job description — assume 1 year
-                years = 1.0
-
-            proficiency = self._get_proficiency(years)
-            software_years[sw] = {"years": years, "proficiency": proficiency}
-
-        return software_years
+        return software_found
 
     # ------------------------------------------------------------------
     # 5) MNC EXPERIENCE
@@ -318,6 +294,7 @@ class ProfileEvaluator:
         return any(k in text for k in GCC_KEYWORDS)
 
     def _get_proficiency(self, years: float) -> str:
+        """Kept for backward compatibility."""
         if years < 1:
             return "Basic"
         elif years < 3:

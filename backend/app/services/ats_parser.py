@@ -99,10 +99,10 @@ class ATSParser:
         combined_skills = list(ai_skills | dict_skills)
 
         return {
-            # Contacts — from regex (99% reliable)
-            "email": contacts["email"],
-            "phone": contacts["phone"],
-            "linkedin": contacts["linkedin"],
+            # Contacts — regex first, Gemini fallback
+            "email": contacts["email"] or ai.get("email"),
+            "phone": contacts["phone"] or ai.get("phone"),
+            "linkedin": contacts["linkedin"] or ai.get("linkedin"),
             "portfolio_urls": contacts["portfolio_urls"],
 
             # Everything else — from Gemini (95%+ reliable)

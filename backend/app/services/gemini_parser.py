@@ -88,6 +88,9 @@ Return this exact JSON structure:
 
 {{
   "name": "string",
+  "email": "string or null",
+  "phone": "string or null",
+  "linkedin": "string or null",
   "summary": "string",
   "position": "string or null",
   "discipline": "string or null",
