@@ -1,6 +1,6 @@
 """
-GeminiParser V2.0 — High-accuracy CV parser using Gemini 2.5 Flash.
-Single API call, native JSON mode, optimized prompt for 95%+ accuracy.
+GeminiParser V2.0 — High-accuracy CV parser using Gemini 2.0 Flash.
+Single API call, optimized prompt for 95%+ accuracy.
 """
 
 import json
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 class GeminiParser:
 
     MAX_INPUT_CHARS = 25000
-    API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
-    MODEL = "gemini-2.5-flash"
+    API_BASE = "https://generativelanguage.googleapis.com/v1/models"
+    MODEL = "gemini-2.0-flash"
 
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
@@ -191,24 +191,8 @@ RESUME TEXT:
                     logger.warning("Gemini returned no parts")
                     return None
 
-                # Gemini 2.5 Flash returns multiple parts:
-                # - "thought" parts (thinking/reasoning) — skip these
-                # - "text" parts (actual response) — use these
-                # Find the last part with actual text content (not thought)
-                text = ""
-                for part in parts:
-                    # Skip thought/reasoning parts
-                    if part.get("thought"):
-                        continue
-                    part_text = part.get("text", "")
-                    if part_text:
-                        text = part_text
-
-                if not text:
-                    # Fallback: just use the last part's text
-                    text = parts[-1].get("text", "")
-
-                logger.info(f"Gemini response: {len(text)} chars in {elapsed}s (parts: {len(parts)})")
+                text = parts[0].get("text", "")
+                logger.info(f"Gemini response: {len(text)} chars in {elapsed}s")
                 return text
 
             except requests.exceptions.Timeout:
