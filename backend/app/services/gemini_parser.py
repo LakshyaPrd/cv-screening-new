@@ -191,8 +191,24 @@ RESUME TEXT:
                     logger.warning("Gemini returned no parts")
                     return None
 
-                text = parts[0].get("text", "")
-                logger.info(f"Gemini response: {len(text)} chars in {elapsed}s")
+                # Gemini 2.5 Flash returns multiple parts:
+                # - "thought" parts (thinking/reasoning) — skip these
+                # - "text" parts (actual response) — use these
+                # Find the last part with actual text content (not thought)
+                text = ""
+                for part in parts:
+                    # Skip thought/reasoning parts
+                    if part.get("thought"):
+                        continue
+                    part_text = part.get("text", "")
+                    if part_text:
+                        text = part_text
+
+                if not text:
+                    # Fallback: just use the last part's text
+                    text = parts[-1].get("text", "")
+
+                logger.info(f"Gemini response: {len(text)} chars in {elapsed}s (parts: {len(parts)})")
                 return text
 
             except requests.exceptions.Timeout:
