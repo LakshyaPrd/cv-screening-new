@@ -114,6 +114,7 @@ class ATSParser:
             "education": ai.get("education") or [],
             "projects": ai.get("projects") or [],
             "certifications": ai.get("certifications") or [],
+            "languages": ai.get("languages") or [],
             "skills": combined_skills,
             "tools": tools,
         }
@@ -139,6 +140,7 @@ class ATSParser:
             "education": [],
             "projects": [],
             "certifications": [],
+            "languages": [],
             "skills": dict_skills,
             "tools": tools,
         }

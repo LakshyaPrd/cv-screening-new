@@ -83,6 +83,7 @@ IMPORTANT — COMMON MISTAKES TO AVOID:
 - Do NOT truncate or summarize — extract COMPLETE data
 - Do NOT miss projects that are listed under experience sections
 - Do NOT include section headers as certifications
+- Extract ALL languages with their proficiency EXACTLY as stated in the CV. Do NOT guess proficiency levels. If proficiency is not stated, use "Not Specified"
 
 Return this exact JSON structure:
 
@@ -121,6 +122,12 @@ Return this exact JSON structure:
     }}
   ],
   "certifications": ["string"],
+  "languages": [
+    {{
+      "language": "string",
+      "proficiency": "string (exactly as stated in CV, e.g. native, intermediate, A1.2, fluent, etc.)"
+    }}
+  ],
   "skills": ["string"]
 }}
 
@@ -306,6 +313,14 @@ RESUME TEXT:
         if isinstance(raw_certs, list):
             result["certifications"] = [c for c in raw_certs if isinstance(c, str)]
 
+        result["languages"] = []
+        for lang in (data.get("languages") or []):
+            if isinstance(lang, dict):
+                result["languages"].append({
+                    "language": lang.get("language") or None,
+                    "proficiency": lang.get("proficiency") or "Not Specified",
+                })
+
         raw_skills = data.get("skills") or []
         if isinstance(raw_skills, list):
             result["skills"] = [s for s in raw_skills if isinstance(s, str)]
@@ -326,6 +341,7 @@ RESUME TEXT:
             "education": [],
             "projects": [],
             "certifications": [],
+            "languages": [],
         }
 
 

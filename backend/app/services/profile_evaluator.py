@@ -61,7 +61,6 @@ class ProfileEvaluator:
         seniority = self.determine_seniority(total_years)
         mnc = self.detect_mnc_experience(experience)
         software_exp = self.calculate_software_experience(all_skills, experience)
-        english = self.detect_english_proficiency(summary)
 
         return {
             "total_experience_years": total_years,
@@ -69,7 +68,6 @@ class ProfileEvaluator:
             "seniority_level": seniority,
             "mnc_experience": mnc,
             "software_experience": software_exp,
-            "english_proficiency": english,
         }
 
     # ------------------------------------------------------------------

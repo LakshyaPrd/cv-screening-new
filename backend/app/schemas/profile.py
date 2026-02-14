@@ -33,6 +33,11 @@ class ProjectEntry(BaseModel):
     duration_end: Optional[str] = None
 
 
+class LanguageEntry(BaseModel):
+    language: Optional[str] = None
+    proficiency: str = "Not Specified"
+
+
 class ExtractedData(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
@@ -46,6 +51,7 @@ class ExtractedData(BaseModel):
     skills: List[str] = []
     tools: List[str] = []
     certifications: List[str] = []
+    languages: List[LanguageEntry] = []
     discipline: Optional[str] = None
     position: Optional[str] = None
     confidence_score: int = 0
@@ -67,7 +73,6 @@ class ComputedMetrics(BaseModel):
     seniority_level: str = "Junior"
     mnc_experience: bool = False
     software_experience: Dict[str, SoftwareExperience] = {}
-    english_proficiency: str = "Intermediate"
 
 
 # ------------------------------------------------------------------
